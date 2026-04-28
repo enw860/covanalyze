@@ -4,6 +4,21 @@
   "title": "Covanalyze Output Schema",
   "description": "JSON Schema for covanalyze coverage analysis tool output. Supports both basic coverage-only mode and enriched mode with AST data.",
   "type": "object",
+  "required": ["file_reports"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the JSON Schema file"
+    },
+    "file_reports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FileReport"
+      },
+      "description": "Array of file coverage reports, sorted by coverage_rate descending"
+    }
+  },
+  "additionalProperties": false,
   "$defs": {
     "UncoveredItem": {
       "type": "object",
