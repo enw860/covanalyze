@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/output.schema.json",
+  "file_reports": [
+    {
+      "file": "internal/config/constants.go",
+      "coverage_rate": 1.0,
+      "uncovered_items": []
+    },
+    {
+      "file": "internal/models/types.go",
+      "coverage_rate": 1.0,
+      "uncovered_items": []
+    },
+    {
+      "file": "internal/processor/worker.go",
+      "coverage_rate": 0.0,
+      "uncovered_items": [
+        {
+          "line_range": "12"
+        },
+        {
+          "line_range": "18-25"
+        },
+        {
+          "line_range": "30"
+        },
+        {
+          "line_range": "35-42"
+        }
+      ]
+    },
+    {
+      "file": "internal/utils/logger.go",
+      "coverage_rate": 0.3333,
+      "uncovered_items": [
+        {
+          "line_range": "8"
+        },
+        {
+          "line_range": "15-20"
+        }
+      ]
+    }
+  ]
+}
