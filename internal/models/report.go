@@ -22,3 +22,12 @@ type FileReport struct {
 	CoverageRate   float64         `json:"coverage_rate"`
 	UncoveredItems []UncoveredItem `json:"uncovered_items"`
 }
+
+// Output represents the root output structure for coverage analysis.
+// Schema field is configurable, defaults to './schema/output.schema.json'.
+// FileReports are sorted by coverage_rate descending.
+// All files are included even with 100% coverage (empty uncovered_items array).
+type Output struct {
+	Schema      string       `json:"$schema"`
+	FileReports []FileReport `json:"file_reports"`
+}
