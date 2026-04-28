@@ -1,0 +1,26 @@
+{
+  "$schema": "../../schema/output.schema.json",
+  "file_reports": [
+    {
+      "file": "internal/calculator/math.go",
+      "coverage_rate": 0.6667,
+      "uncovered_items": [
+        {
+          "line_range": "15"
+        },
+        {
+          "line_range": "23-27"
+        }
+      ]
+    },
+    {
+      "file": "internal/utils/helpers.go",
+      "coverage_rate": 0.8500,
+      "uncovered_items": [
+        {
+          "line_range": "42"
+        }
+      ]
+    }
+  ]
+}

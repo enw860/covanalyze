@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "covanalyze-output-schema-v1",
+  "title": "Covanalyze Output Schema",
+  "description": "JSON Schema for covanalyze coverage analysis tool output. Supports both basic coverage-only mode and enriched mode with AST data.",
+  "type": "object",
+  "required": ["file_reports"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the JSON Schema file"
+    },
+    "file_reports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FileReport"
+      },
+      "description": "Array of file coverage reports, sorted by coverage_rate descending"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "UncoveredItem": {
+      "type": "object",
+      "description": "Represents a single uncovered code segment with optional AST enrichment data",
+      "required": ["line_range"],
+      "properties": {
+        "function": {
+          "type": "string",
+          "description": "Name of the function containing this uncovered code. Truncated at 256 characters with '...' suffix if longer. Optional field populated during AST enrichment."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["branch", "error_path", "early_return", "loop", ""],
+          "description": "Type of uncovered code segment. Valid values: 'branch' (conditional branch), 'error_path' (error handling path), 'early_return' (early return statement), 'loop' (loop body), or empty string when type cannot be determined. Optional field populated during AST enrichment."
+        },
+        "condition": {
+          "type": "string",
+          "description": "The condition expression for branches or loops. Truncated at 512 characters with '...' suffix if longer. Uses empty string when unavailable. Optional field populated during AST enrichment."
+        },
+        "line_range": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(-[1-9][0-9]*)?$",
+          "description": "Line range of uncovered code in format 'start' or 'start-end'. Single line format: '45'. Multi-line format: '45-52'. Start line must be > 0, end line must be >= start line."
+        }
+      },
+      "additionalProperties": false
+    },
+    "FileReport": {
+      "type": "object",
+      "description": "Represents coverage analysis results for a single file",
+      "required": ["file", "coverage_rate", "uncovered_items"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "File path exactly as it appears in coverage.out, relative to project root. No path normalization applied."
+        },
+        "coverage_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Coverage rate for this file, rounded to 4 decimal places (e.g., 0.7845). Set to 1.0 for files with 0 statements."
+        },
+        "uncovered_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UncoveredItem"
+          },
+          "description": "Array of uncovered code segments, sorted by line number ascending. Empty array for files with 100% coverage."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
