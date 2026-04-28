@@ -30,6 +30,31 @@
         }
       },
       "additionalProperties": false
+    },
+    "FileReport": {
+      "type": "object",
+      "description": "Represents coverage analysis results for a single file",
+      "required": ["file", "coverage_rate", "uncovered_items"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "File path exactly as it appears in coverage.out, relative to project root. No path normalization applied."
+        },
+        "coverage_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Coverage rate for this file, rounded to 4 decimal places (e.g., 0.7845). Set to 1.0 for files with 0 statements."
+        },
+        "uncovered_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UncoveredItem"
+          },
+          "description": "Array of uncovered code segments, sorted by line number ascending. Empty array for files with 100% coverage."
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
