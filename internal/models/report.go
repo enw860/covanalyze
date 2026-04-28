@@ -11,3 +11,14 @@ type UncoveredItem struct {
 	Condition string `json:"condition,omitempty"`
 	LineRange string `json:"line_range"`
 }
+
+// FileReport represents per-file coverage analysis results.
+// CoverageRate is rounded to 4 decimal places (e.g., 0.7845).
+// CoverageRate = 1.0 for files with 0 statements.
+// File paths are output exactly as they appear in coverage.out (no normalization).
+// UncoveredItems are sorted by line number ascending.
+type FileReport struct {
+	File           string          `json:"file"`
+	CoverageRate   float64         `json:"coverage_rate"`
+	UncoveredItems []UncoveredItem `json:"uncovered_items"`
+}
