@@ -1,0 +1,59 @@
+{
+  "$schema": "../../schema/output.schema.json",
+  "file_reports": [
+    {
+      "file": "internal/processor/handler.go",
+      "coverage_rate": 0.7250,
+      "uncovered_items": [
+        {
+          "function": "ProcessRequest",
+          "type": "branch",
+          "condition": "if err != nil",
+          "line_range": "34-36"
+        },
+        {
+          "function": "ProcessRequest",
+          "type": "error_path",
+          "condition": "if status == StatusFailed",
+          "line_range": "45"
+        },
+        {
+          "function": "ValidateInput",
+          "type": "early_return",
+          "condition": "if input == nil",
+          "line_range": "58-59"
+        }
+      ]
+    },
+    {
+      "file": "internal/processor/validator.go",
+      "coverage_rate": 0.8125,
+      "uncovered_items": [
+        {
+          "function": "CheckRules",
+          "type": "loop",
+          "condition": "for _, rule := range rules",
+          "line_range": "23-28"
+        },
+        {
+          "function": "ApplyDefaults",
+          "type": "",
+          "condition": "",
+          "line_range": "67"
+        }
+      ]
+    },
+    {
+      "file": "internal/utils/formatter.go",
+      "coverage_rate": 0.9000,
+      "uncovered_items": [
+        {
+          "function": "FormatOutput",
+          "type": "branch",
+          "condition": "if format == \"json\"",
+          "line_range": "15-18"
+        }
+      ]
+    }
+  ]
+}
