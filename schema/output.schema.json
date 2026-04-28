@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "covanalyze-output-schema-v1",
+  "title": "Covanalyze Output Schema",
+  "description": "JSON Schema for covanalyze coverage analysis tool output. Supports both basic coverage-only mode and enriched mode with AST data.",
+  "type": "object"
+}
