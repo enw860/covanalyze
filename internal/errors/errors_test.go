@@ -69,5 +69,3 @@ func TestUnsupportedModeError(t *testing.T) {
 		})
 	}
 }
-
-// Made with Bob

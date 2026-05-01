@@ -46,5 +46,3 @@ func ParseCoverageFile(path string) ([]*cover.Profile, error) {
 
 	return profiles, nil
 }
-
-// Made with Bob
