@@ -1,0 +1,26 @@
+covanalyze - Coverage analysis tool for Go coverage.out files
+
+Usage:
+  covanalyze [flags] <coverage-file>
+
+Note: Flags must be specified before the coverage-file argument.
+
+Arguments:
+  coverage-file    Path to the coverage.out file (required)
+
+Flags:
+  -o string        Output file path (default: stdout)
+  -v int           Verbose logging level (0=off, 1=info, 2=debug)
+  --help           Show this help message
+
+Exit Codes:
+  0    Success
+  1    File not found
+  2    Parse error (invalid format or unsupported mode)
+  3    Validation error
+
+Examples:
+  covanalyze coverage.out
+  covanalyze coverage.out -o report.json
+  covanalyze coverage.out -v 2
+  covanalyze --help
