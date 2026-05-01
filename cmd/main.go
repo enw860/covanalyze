@@ -15,10 +15,10 @@ import (
 
 const (
 	// Exit codes
-	exitSuccess         = 0
-	exitFileNotFound    = 1
-	exitParseError      = 2
-	exitValidationError = 3
+	exitSuccess      = 0
+	exitFileNotFound = 1
+	exitParseError   = 2
+	exitOutputError  = 3
 )
 
 //go:embed usage.txt
@@ -83,7 +83,7 @@ func main() {
 	jsonBytes, err := formatter.FormatJSON(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(exitValidationError)
+		os.Exit(exitOutputError)
 	}
 
 	// Write output
@@ -95,7 +95,7 @@ func main() {
 		err := os.WriteFile(*outputFile, jsonBytes, 0644)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing output file: %v\n", err)
-			os.Exit(exitValidationError)
+			os.Exit(exitOutputError)
 		}
 		glog.V(1).Info("Output written successfully")
 	} else {
