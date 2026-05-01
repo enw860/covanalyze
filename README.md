@@ -66,6 +66,8 @@ covanalyze [flags]
 
 - `-f <file>` - Coverage file path (required)
 - `-o <file>` - Output file path (default: stdout)
+- `-m <string>` - Module prefix to replace in file paths (optional, requires -mpath)
+- `-mpath <string>` - Path prefix to replace module with (optional, requires -m)
 - `-v <level>` - Verbose logging level (0=off, 1=info, 2=debug, 3=trace)
 - `--help` - Show help message
 
@@ -87,7 +89,17 @@ Write the JSON report to a file:
 covanalyze -f coverage.out -o report.json
 ```
 
-#### 3. Verbose Logging
+#### 3. Path Normalization
+
+Normalize file paths by replacing module prefix with a local path:
+
+```bash
+covanalyze -f coverage.out -m github.com/user/repo -mpath ./
+```
+
+This is useful when you want to convert module-prefixed paths (e.g., `github.com/user/repo/pkg/file.go`) to local paths (e.g., `./pkg/file.go`). Both `-m` and `-mpath` flags must be provided together.
+
+#### 4. Verbose Logging
 
 Enable verbose logging to see detailed processing information:
 
@@ -95,7 +107,7 @@ Enable verbose logging to see detailed processing information:
 covanalyze -f coverage.out -v 2
 ```
 
-#### 4. Help Flag
+#### 5. Help Flag
 
 Display usage information:
 
