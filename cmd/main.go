@@ -73,6 +73,10 @@ func main() {
 		fileReports = append(fileReports, report)
 	}
 
+	// Enrich file reports with AST-based semantic context
+	glog.V(1).Info("Enriching coverage reports with semantic context")
+	parser.EnrichFileReports(fileReports)
+
 	// Create output structure
 	output := &models.Output{
 		FileReports: fileReports,

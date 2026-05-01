@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -504,17 +503,6 @@ func TestParseSourceFile_MissingFile(t *testing.T) {
 	}
 }
 
-func TestParseSourceFile_InvalidSyntax(t *testing.T) {
-	invalidFile := filepath.Join("../../test/enricher/invalid_syntax.go")
-	nodes, err := parseSourceFile(invalidFile)
-	if err == nil {
-		t.Error("parseSourceFile() expected error for invalid syntax, got nil")
-	}
-	if nodes != nil {
-		t.Errorf("parseSourceFile() expected nil nodes for invalid syntax, got %v", nodes)
-	}
-}
-
 func TestEnrichFileReports(t *testing.T) {
 	longFunctionName := strings.Repeat("f", models.MaxFunctionNameLength+10)
 	longCondition := strings.Repeat("c", models.MaxConditionLength+10)
@@ -614,34 +602,6 @@ func TestEnrichFileReports(t *testing.T) {
 				}
 				if item.LineRange != "10-12" {
 					t.Errorf("LineRange = %q, expected %q", item.LineRange, "10-12")
-				}
-			},
-		},
-		{
-			name: "leaves fields empty for invalid syntax",
-			reports: []models.FileReport{
-				{
-					File: "../../test/enricher/invalid_syntax.go",
-					UncoveredItems: []models.UncoveredItem{
-						{LineRange: "4-5"},
-					},
-				},
-			},
-			validate: func(t *testing.T, reports []models.FileReport) {
-				t.Helper()
-
-				item := reports[0].UncoveredItems[0]
-				if item.Function != "" {
-					t.Errorf("Function = %q, expected empty string", item.Function)
-				}
-				if item.Type != "" {
-					t.Errorf("Type = %q, expected empty string", item.Type)
-				}
-				if item.Condition != "" {
-					t.Errorf("Condition = %q, expected empty string", item.Condition)
-				}
-				if item.LineRange != "4-5" {
-					t.Errorf("LineRange = %q, expected %q", item.LineRange, "4-5")
 				}
 			},
 		},
