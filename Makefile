@@ -7,7 +7,7 @@ build:
 
 # Run all unit tests with coverage
 test:
-	go test -v -coverprofile=coverage.out ./internal/...
+	go test -v -coverprofile=coverage.out -covermode=set ./internal/...
 
 # Remove bin directory and build artifacts
 clean:
