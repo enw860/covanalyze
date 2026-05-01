@@ -20,7 +20,7 @@ import (
 func CalculateFileCoverage(profile *cover.Profile) models.FileReport {
 	var totalStatements int
 	var coveredStatements int
-	var uncoveredItems []models.UncoveredItem
+	uncoveredItems := make([]models.UncoveredItem, 0)
 
 	// Process each block in the profile
 	for _, block := range profile.Blocks {
