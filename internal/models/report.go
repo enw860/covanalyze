@@ -1,5 +1,10 @@
 package models
 
+const (
+	MaxFunctionNameLength = 256
+	MaxConditionLength    = 512
+)
+
 // UncoveredItem represents a single uncovered code segment.
 // Type field is a strict enum: "branch", "error_path", "early_return", "loop", or empty string.
 // Function names are truncated at 256 chars with "..." suffix.

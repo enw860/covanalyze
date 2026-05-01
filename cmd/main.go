@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/enw860/covanalyze/internal/errors"
 	"github.com/enw860/covanalyze/internal/formatter"
@@ -15,10 +16,10 @@ import (
 
 const (
 	// Exit codes
-	exitSuccess         = 0
-	exitFileNotFound    = 1
-	exitParseError      = 2
-	exitValidationError = 3
+	exitSuccess      = 0
+	exitFileNotFound = 1
+	exitParseError   = 2
+	exitOutputError  = 3
 )
 
 //go:embed usage.txt
@@ -28,6 +29,8 @@ var (
 	coverageFile = flag.String("f", "", "Coverage file path (required)")
 	outputFile   = flag.String("o", "", "Output file path (default: stdout)")
 	showHelp     = flag.Bool("help", false, "Show help message")
+	module       = flag.String("m", "", "Module prefix to replace in file paths")
+	modulePath   = flag.String("mpath", "", "Path prefix to replace module with")
 )
 
 func main() {
@@ -73,6 +76,21 @@ func main() {
 		fileReports = append(fileReports, report)
 	}
 
+	// Normalize file paths if module and path flags are provided
+	if *module != "" || *modulePath != "" {
+		if *module == "" || *modulePath == "" {
+			fmt.Fprintln(os.Stderr, "Error: both -m and -mpath flags must be provided together")
+			fmt.Fprintln(os.Stderr, "Run 'covanalyze --help' for usage information")
+			os.Exit(exitParseError)
+		}
+		glog.V(1).Infof("Normalizing file paths: replacing '%s' with '%s'", *module, *modulePath)
+		normalizeFilePaths(fileReports, *module, *modulePath)
+	}
+
+	// Enrich file reports with AST-based semantic context
+	glog.V(1).Info("Enriching coverage reports with semantic context")
+	parser.EnrichFileReports(fileReports)
+
 	// Create output structure
 	output := &models.Output{
 		FileReports: fileReports,
@@ -83,7 +101,7 @@ func main() {
 	jsonBytes, err := formatter.FormatJSON(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(exitValidationError)
+		os.Exit(exitOutputError)
 	}
 
 	// Write output
@@ -95,7 +113,7 @@ func main() {
 		err := os.WriteFile(*outputFile, jsonBytes, 0644)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing output file: %v\n", err)
-			os.Exit(exitValidationError)
+			os.Exit(exitOutputError)
 		}
 		glog.V(1).Info("Output written successfully")
 	} else {
@@ -124,5 +142,15 @@ func handleError(err error) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		glog.Flush()
 		os.Exit(exitParseError)
+	}
+}
+
+// normalizeFilePaths replaces the module prefix with the path prefix in all file reports.
+func normalizeFilePaths(fileReports []models.FileReport, module, path string) {
+	for i := range fileReports {
+		if strings.HasPrefix(fileReports[i].File, module) {
+			fileReports[i].File = strings.Replace(fileReports[i].File, module, path, 1)
+			glog.V(2).Infof("Normalized file path: %s", fileReports[i].File)
+		}
 	}
 }
