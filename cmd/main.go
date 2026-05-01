@@ -25,8 +25,9 @@ const (
 var usageText string
 
 var (
-	outputFile = flag.String("o", "", "Output file path (default: stdout)")
-	showHelp   = flag.Bool("help", false, "Show help message")
+	coverageFile = flag.String("f", "", "Coverage file path (required)")
+	outputFile   = flag.String("o", "", "Output file path (default: stdout)")
+	showHelp     = flag.Bool("help", false, "Show help message")
 )
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 	glog.V(3).Infof("flag.Args() = %v", flag.Args())
 	glog.V(3).Infof("flag.NArg() = %d", flag.NArg())
 	glog.V(3).Infof("os.Args = %v", os.Args)
+	glog.V(3).Infof("coverageFile = '%s'", *coverageFile)
 
 	// Handle --help flag
 	if *showHelp {
@@ -47,19 +49,16 @@ func main() {
 		os.Exit(exitSuccess)
 	}
 
-	// Get positional argument for coverage file path
-	args := flag.Args()
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Error: coverage file path is required")
+	// Validate required coverage file flag
+	if *coverageFile == "" {
+		fmt.Fprintln(os.Stderr, "Error: coverage file path is required (use -f flag)")
 		fmt.Fprintln(os.Stderr, "Run 'covanalyze --help' for usage information")
 		os.Exit(exitParseError)
 	}
 
-	coverageFile := args[0]
-
 	// Parse coverage file
-	glog.V(1).Infof("Parsing coverage file: %s", coverageFile)
-	profiles, err := parser.ParseCoverageFile(coverageFile)
+	glog.V(1).Infof("Parsing coverage file: %s", *coverageFile)
+	profiles, err := parser.ParseCoverageFile(*coverageFile)
 	if err != nil {
 		handleError(err)
 	}

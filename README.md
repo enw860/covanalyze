@@ -59,13 +59,12 @@ This builds the binary to `bin/covanalyze` (no system-wide installation).
 ### Basic Syntax
 
 ```bash
-covanalyze [flags] <coverage-file>
+covanalyze [flags]
 ```
-
-**Note:** Flags must be specified before the coverage-file argument.
 
 ### Flags
 
+- `-f <file>` - Coverage file path (required)
 - `-o <file>` - Output file path (default: stdout)
 - `-v <level>` - Verbose logging level (0=off, 1=info, 2=debug, 3=trace)
 - `--help` - Show help message
@@ -77,7 +76,7 @@ covanalyze [flags] <coverage-file>
 Parse a coverage file and output JSON to stdout:
 
 ```bash
-covanalyze coverage.out
+covanalyze -f coverage.out
 ```
 
 #### 2. Output to File
@@ -85,7 +84,7 @@ covanalyze coverage.out
 Write the JSON report to a file:
 
 ```bash
-covanalyze -o report.json coverage.out
+covanalyze -f coverage.out -o report.json
 ```
 
 #### 3. Verbose Logging
@@ -93,7 +92,7 @@ covanalyze -o report.json coverage.out
 Enable verbose logging to see detailed processing information:
 
 ```bash
-covanalyze -v 2 coverage.out
+covanalyze -f coverage.out -v 2
 ```
 
 #### 4. Help Flag
@@ -165,16 +164,16 @@ Example error messages:
 
 ```bash
 # File not found
-$ covanalyze nonexistent.out
+$ covanalyze -f nonexistent.out
 Error: file not found: nonexistent.out
 
 # Unsupported mode
-$ covanalyze count_mode.out
+$ covanalyze -f count_mode.out
 Error: unsupported coverage mode 'count': only 'set' mode is supported
 
-# Missing argument
+# Missing required flag
 $ covanalyze
-Error: coverage file path is required
+Error: coverage file path is required (use -f flag)
 Run 'covanalyze --help' for usage information
 ```
 
