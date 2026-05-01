@@ -2,6 +2,7 @@ package parser
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/enw860/covanalyze/internal/models"
@@ -511,5 +512,175 @@ func TestParseSourceFile_InvalidSyntax(t *testing.T) {
 	}
 	if nodes != nil {
 		t.Errorf("parseSourceFile() expected nil nodes for invalid syntax, got %v", nodes)
+	}
+}
+
+func TestEnrichFileReports(t *testing.T) {
+	longFunctionName := strings.Repeat("f", models.MaxFunctionNameLength+10)
+	longCondition := strings.Repeat("c", models.MaxConditionLength+10)
+
+	tests := []struct {
+		name     string
+		reports  []models.FileReport
+		validate func(t *testing.T, reports []models.FileReport)
+	}{
+		{
+			name: "enriches items in place",
+			reports: []models.FileReport{
+				{
+					File: "../../test/enricher/if_simple.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "4-6"},
+					},
+				},
+				{
+					File: "../../test/enricher/for_condition.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "4-6"},
+					},
+				},
+				{
+					File: "../../test/enricher/switch_simple.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "5"},
+					},
+				},
+			},
+			validate: func(t *testing.T, reports []models.FileReport) {
+				t.Helper()
+
+				if reports[0].UncoveredItems[0].Function != "ifSimple" {
+					t.Errorf("Function = %q, expected %q", reports[0].UncoveredItems[0].Function, "ifSimple")
+				}
+				if reports[0].UncoveredItems[0].Type != "branch" {
+					t.Errorf("Type = %q, expected %q", reports[0].UncoveredItems[0].Type, "branch")
+				}
+				if reports[0].UncoveredItems[0].Condition != "x > 0" {
+					t.Errorf("Condition = %q, expected %q", reports[0].UncoveredItems[0].Condition, "x > 0")
+				}
+				if reports[0].UncoveredItems[0].LineRange != "4-6" {
+					t.Errorf("LineRange = %q, expected %q", reports[0].UncoveredItems[0].LineRange, "4-6")
+				}
+
+				if reports[1].UncoveredItems[0].Function != "forCondition" {
+					t.Errorf("Function = %q, expected %q", reports[1].UncoveredItems[0].Function, "forCondition")
+				}
+				if reports[1].UncoveredItems[0].Type != "loop" {
+					t.Errorf("Type = %q, expected %q", reports[1].UncoveredItems[0].Type, "loop")
+				}
+				if reports[1].UncoveredItems[0].Condition != "i < 10" {
+					t.Errorf("Condition = %q, expected %q", reports[1].UncoveredItems[0].Condition, "i < 10")
+				}
+				if reports[1].UncoveredItems[0].LineRange != "4-6" {
+					t.Errorf("LineRange = %q, expected %q", reports[1].UncoveredItems[0].LineRange, "4-6")
+				}
+
+				if reports[2].UncoveredItems[0].Function != "switchSimple" {
+					t.Errorf("Function = %q, expected %q", reports[2].UncoveredItems[0].Function, "switchSimple")
+				}
+				if reports[2].UncoveredItems[0].Type != "branch" {
+					t.Errorf("Type = %q, expected %q", reports[2].UncoveredItems[0].Type, "branch")
+				}
+				if reports[2].UncoveredItems[0].Condition != "1" {
+					t.Errorf("Condition = %q, expected %q", reports[2].UncoveredItems[0].Condition, "1")
+				}
+				if reports[2].UncoveredItems[0].LineRange != "5" {
+					t.Errorf("LineRange = %q, expected %q", reports[2].UncoveredItems[0].LineRange, "5")
+				}
+			},
+		},
+		{
+			name: "leaves fields empty for missing file",
+			reports: []models.FileReport{
+				{
+					File: "/nonexistent/file.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "10-12"},
+					},
+				},
+			},
+			validate: func(t *testing.T, reports []models.FileReport) {
+				t.Helper()
+
+				item := reports[0].UncoveredItems[0]
+				if item.Function != "" {
+					t.Errorf("Function = %q, expected empty string", item.Function)
+				}
+				if item.Type != "" {
+					t.Errorf("Type = %q, expected empty string", item.Type)
+				}
+				if item.Condition != "" {
+					t.Errorf("Condition = %q, expected empty string", item.Condition)
+				}
+				if item.LineRange != "10-12" {
+					t.Errorf("LineRange = %q, expected %q", item.LineRange, "10-12")
+				}
+			},
+		},
+		{
+			name: "leaves fields empty for invalid syntax",
+			reports: []models.FileReport{
+				{
+					File: "../../test/enricher/invalid_syntax.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "4-5"},
+					},
+				},
+			},
+			validate: func(t *testing.T, reports []models.FileReport) {
+				t.Helper()
+
+				item := reports[0].UncoveredItems[0]
+				if item.Function != "" {
+					t.Errorf("Function = %q, expected empty string", item.Function)
+				}
+				if item.Type != "" {
+					t.Errorf("Type = %q, expected empty string", item.Type)
+				}
+				if item.Condition != "" {
+					t.Errorf("Condition = %q, expected empty string", item.Condition)
+				}
+				if item.LineRange != "4-5" {
+					t.Errorf("LineRange = %q, expected %q", item.LineRange, "4-5")
+				}
+			},
+		},
+		{
+			name: "truncates function and condition values",
+			reports: []models.FileReport{
+				{
+					File: "../../test/enricher/if_simple.go",
+					UncoveredItems: []models.UncoveredItem{
+						{LineRange: "4-6"},
+					},
+				},
+			},
+			validate: func(t *testing.T, reports []models.FileReport) {
+				t.Helper()
+
+				reports[0].UncoveredItems[0].Function = truncateString(longFunctionName, models.MaxFunctionNameLength)
+				reports[0].UncoveredItems[0].Condition = truncateString(longCondition, models.MaxConditionLength)
+
+				if len(reports[0].UncoveredItems[0].Function) != models.MaxFunctionNameLength {
+					t.Errorf("Function length = %d, expected %d", len(reports[0].UncoveredItems[0].Function), models.MaxFunctionNameLength)
+				}
+				if !strings.HasSuffix(reports[0].UncoveredItems[0].Function, "...") {
+					t.Errorf("Function = %q, expected ellipsis suffix", reports[0].UncoveredItems[0].Function)
+				}
+				if len(reports[0].UncoveredItems[0].Condition) != models.MaxConditionLength {
+					t.Errorf("Condition length = %d, expected %d", len(reports[0].UncoveredItems[0].Condition), models.MaxConditionLength)
+				}
+				if !strings.HasSuffix(reports[0].UncoveredItems[0].Condition, "...") {
+					t.Errorf("Condition = %q, expected ellipsis suffix", reports[0].UncoveredItems[0].Condition)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			EnrichFileReports(tt.reports)
+			tt.validate(t, tt.reports)
+		})
 	}
 }

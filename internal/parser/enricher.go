@@ -2,11 +2,13 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
 	"go/token"
 	"os"
+	"strings"
 
 	"github.com/enw860/covanalyze/internal/models"
 	"github.com/golang/glog"
@@ -174,4 +176,106 @@ func parseSourceFile(filepath string) ([]models.ASTNode, error) {
 	})
 
 	return nodes, nil
+}
+
+// EnrichFileReports enriches uncovered items in-place using source AST context.
+// Missing or unparseable source files are skipped with warnings.
+func EnrichFileReports(fileReports []models.FileReport) {
+	for fileIndex := range fileReports {
+		nodes, err := parseSourceFile(fileReports[fileIndex].File)
+		if err != nil {
+			if os.IsNotExist(err) {
+				glog.Warningf("Skipping enrichment for missing source file %s", fileReports[fileIndex].File)
+			} else {
+				glog.Warningf("Skipping enrichment for unparseable source file %s: %v", fileReports[fileIndex].File, err)
+			}
+			continue
+		}
+
+		for itemIndex := range fileReports[fileIndex].UncoveredItems {
+			item := &fileReports[fileIndex].UncoveredItems[itemIndex]
+			node := mapLineRangeToNode(item.LineRange, nodes)
+			if node == nil {
+				continue
+			}
+
+			item.Function = truncateString(node.FunctionName, models.MaxFunctionNameLength)
+			item.Type = classifyNodeType(*node)
+			item.Condition = truncateString(node.Condition, models.MaxConditionLength)
+		}
+	}
+}
+
+func mapLineRangeToNode(lineRange string, nodes []models.ASTNode) *models.ASTNode {
+	startLine, endLine := parseLineRange(lineRange)
+
+	var bestNode *models.ASTNode
+	bestSpan := 0
+
+	for index := range nodes {
+		node := &nodes[index]
+		if !rangesOverlap(startLine, endLine, node.StartLine, node.EndLine) {
+			continue
+		}
+
+		span := node.EndLine - node.StartLine
+		if bestNode == nil || span < bestSpan {
+			bestNode = node
+			bestSpan = span
+		}
+	}
+
+	return bestNode
+}
+
+func parseLineRange(lineRange string) (int, int) {
+	var startLine int
+	var endLine int
+
+	if strings.Contains(lineRange, "-") {
+		if _, err := fmt.Sscanf(lineRange, "%d-%d", &startLine, &endLine); err == nil {
+			return startLine, endLine
+		}
+	}
+
+	if _, err := fmt.Sscanf(lineRange, "%d", &startLine); err == nil {
+		return startLine, startLine
+	}
+
+	return 0, 0
+}
+
+func rangesOverlap(startA, endA, startB, endB int) bool {
+	return startA <= endB && startB <= endA
+}
+
+func classifyNodeType(node models.ASTNode) string {
+	switch node.NodeType {
+	case models.NodeTypeFor, models.NodeTypeRange:
+		return "loop"
+	case models.NodeTypeIf:
+		if isErrorCondition(node.Condition) {
+			return "error_path"
+		}
+		return "branch"
+	case models.NodeTypeElse, models.NodeTypeSwitch, models.NodeTypeTypeSwitch, models.NodeTypeCase:
+		return "branch"
+	default:
+		return ""
+	}
+}
+
+func isErrorCondition(condition string) bool {
+	normalized := strings.ReplaceAll(condition, " ", "")
+	return strings.Contains(normalized, "err!=nil") || strings.Contains(normalized, "err==nil")
+}
+
+func truncateString(value string, maxLength int) string {
+	if len(value) <= maxLength {
+		return value
+	}
+	if maxLength <= 3 {
+		return value[:maxLength]
+	}
+	return value[:maxLength-3] + "..."
 }
